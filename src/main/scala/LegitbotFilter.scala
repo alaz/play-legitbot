@@ -20,7 +20,7 @@ case class LegitbotFilter(errorHandler: RequestHeader => Result = Defaults.error
             true
         }
 
-      if (malicious.isDefined) Some(Future successful errorHandler(requestHeader))
+      if (malicious.exists(true.==)) Some(Future successful errorHandler(requestHeader))
       else None
     } getOrElse nextFilter(requestHeader)
 }
