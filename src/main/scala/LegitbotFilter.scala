@@ -34,6 +34,7 @@ object Defaults {
     Googlebot, Google_AdsBot, Google_AdSense,
     Yandexbot, YandexDirect, YandexAntivirus, YandexOther,
     Bingbot,
-    DuckDuckGo
+    DuckDuckGo,
+    Baiduspider
   )
 }

@@ -81,6 +81,13 @@ object Bingbot extends VerifiableBot {
     VerifiableBot.domainMatch(Seq("search.msn.com"))(req.remoteAddress)
 }
 
+// http://help.baidu.com/question?prod_en=master&class=498&id=1000973
+object Baiduspider extends VerifiableBot {
+  override val userAgent = """Baiduspider""".r
+  override def validate(req: RequestHeader) =
+    VerifiableBot.domainMatch(Seq("baidu.com", "baidu.jp"))(req.remoteAddress)
+}
+
 // https://duckduckgo.com/duckduckbot
 object DuckDuckGo extends VerifiableBot {
   val IPs = Seq("72.94.249.34", "72.94.249.35", "72.94.249.36", "72.94.249.37", "72.94.249.38")
