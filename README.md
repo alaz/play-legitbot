@@ -17,3 +17,7 @@ Install the filter in `Global.scala`:
 ```
 object Global extends WithFilters(LegitbotFilter)
 ```
+
+# Other projects
+
+* [webcrawler-verifier](https://github.com/optimaize/webcrawler-verifier)
