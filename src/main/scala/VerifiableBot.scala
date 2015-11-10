@@ -95,3 +95,9 @@ object DuckDuckGo extends VerifiableBot {
   override val userAgent = """DuckDuckGo""".r
   override def validate(req: RequestHeader) = IPs.exists(req.remoteAddress.==)
 }
+
+// TODO: Facebook
+// https://developers.facebook.com/docs/sharing/webmasters/crawler
+
+// TODO: Twitter
+// http://stackoverflow.com/questions/32484202/list-of-ip-addresses-used-by-twitterbot
