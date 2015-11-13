@@ -2,11 +2,15 @@ package com.osinka.play.legitbot
 
 import java.net.InetAddress
 import scala.util.control.Exception._
+import com.typesafe.config.ConfigFactory
 
 object BotMatches {
+  lazy val config = ConfigFactory.load.getConfig("legitbot")
+
   val JavaxDnsEnv = {
     val env = new java.util.Hashtable[String, String]
     env.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory")
+    env.put("java.naming.provider.url", config.getString("provider-url"))
     env
   }
 
