@@ -17,7 +17,12 @@ scalaVersion in ThisBuild := "2.11.7"
 libraryDependencies in ThisBuild ++= Seq(
   "com.typesafe.play" %% "play" % "2.3.10" % "provided",
   "com.typesafe.play" %% "play-test" % "2.3.10" % "test",
-  "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+  "org.scalatest" %% "scalatest" % "2.2.5" % "test"
+)
+
+resolvers ++= Seq(
+  Resolver.typesafeRepo("releases"),
+  Resolver.sonatypeRepo("releases")
 )
 
 scalacOptions ++= List("-deprecation", "-unchecked", "-feature")
