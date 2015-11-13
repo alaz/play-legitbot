@@ -1,6 +1,7 @@
 package com.osinka.play.legitbot
 
 import java.net.InetAddress
+import scala.util.control.Exception._
 import scala.util.matching.Regex
 import play.api.mvc.RequestHeader
 
@@ -22,14 +23,51 @@ trait VerifiableBot {
 }
 
 object VerifiableBot {
-  def domainMatch(domains: Seq[String])(ip: String) = {
+  val JavaxDnsEnv = {
+    val env = new java.util.Hashtable[String, String]
+    env.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory")
+    env
+  }
+
+  //
+  // DNS via JNDI call
+  // Credit: http://www.codingforums.com/java-and-jsp/182959-java-reverse-dns-lookup.html#post892349
+  //
+  // fallbacks to unreliable `InetAddress.getByName(ip).getCanonicalHostName` if unsuccessful
+  //
+  def reverseLookup(ip: String) = {
+    import javax.naming.NamingException
+    import javax.naming.directory._
+    import scala.collection.convert.decorateAsScala._
+
+    val context = new InitialDirContext(JavaxDnsEnv)
+    val results =
+      failAsValue(classOf[NamingException])(Iterator.empty).andFinally(context.close) {
+        val octets = ip split """\."""
+        val rev = octets.reverse.mkString(".") + ".in-addr.arpa"
+        val attrs = context.getAttributes(rev, Array("PTR")).getAll.asScala
+
+        attrs.filter(_.getID == "PTR").flatMap(_.getAll.asScala).map(_.toString).map { s =>
+          if (s.endsWith(".")) s.dropRight(1)
+          else s
+        }
+      }
+
+    if (results.hasNext) results.next()
+    else InetAddress.getByName(ip).getCanonicalHostName
+  }
+
+  def reverseMatch(domains: Seq[String])(ip: String) = {
+    val reverse = reverseLookup(ip)
+    domains.exists(reverse.endsWith)
+  }
+
+  def reverseForwardMatch(domains: Seq[String])(ip: String) = {
     val addr = InetAddress.getByName(ip)
-    val reverse = addr.getCanonicalHostName
-    if (domains.exists(reverse.endsWith)) {
-      val forward = InetAddress.getByName(reverse)
-      addr == forward
-    } else
-      false
+    val reverse = reverseLookup(ip)
+    failAsValue(classOf[java.net.UnknownHostException])(false) {
+      domains.exists(reverse.endsWith) && InetAddress.getByName(reverse) == addr
+    }
   }
 }
 
@@ -37,7 +75,7 @@ object VerifiableBot {
 // NOTE: NOT distinguishing between Video / Mobile / other variations
 trait Googlebot extends VerifiableBot {
   override def validate(req: RequestHeader) =
-    VerifiableBot.domainMatch(Seq("google.com", "googlebot.com"))(req.remoteAddress)
+    VerifiableBot.reverseForwardMatch(Seq("google.com", "googlebot.com"))(req.remoteAddress)
 }
 
 object Googlebot extends Googlebot {
@@ -55,7 +93,7 @@ object Google_AdsBot extends Googlebot {
 // https://yandex.com/support/webmaster/robot-workings/check-yandex-robots.xml
 trait Yandexbot extends VerifiableBot {
   override def validate(req: RequestHeader) =
-    VerifiableBot.domainMatch(Seq("yandex.ru", "yandex.net", "yandex.com"))(req.remoteAddress)
+    VerifiableBot.reverseForwardMatch(Seq("yandex.ru", "yandex.net", "yandex.com"))(req.remoteAddress)
 }
 
 object Yandexbot extends Yandexbot {
@@ -78,14 +116,14 @@ object YandexOther extends Yandexbot {
 object Bingbot extends VerifiableBot {
   override val userAgent = """Bingbot|bingbot""".r
   override def validate(req: RequestHeader) =
-    VerifiableBot.domainMatch(Seq("search.msn.com"))(req.remoteAddress)
+    VerifiableBot.reverseForwardMatch(Seq("search.msn.com"))(req.remoteAddress)
 }
 
 // http://help.baidu.com/question?prod_en=master&class=498&id=1000973
 object Baiduspider extends VerifiableBot {
   override val userAgent = """Baiduspider""".r
   override def validate(req: RequestHeader) =
-    VerifiableBot.domainMatch(Seq("baidu.com", "baidu.jp"))(req.remoteAddress)
+    VerifiableBot.reverseMatch(Seq("baidu.com", "baidu.jp"))(req.remoteAddress)
 }
 
 // https://duckduckgo.com/duckduckbot
