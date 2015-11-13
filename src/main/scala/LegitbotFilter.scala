@@ -11,8 +11,8 @@ case class LegitbotFilter(errorHandler: RequestHeader => Result = Defaults.error
   def apply(nextFilter: (RequestHeader) => Future[Result])(requestHeader: RequestHeader): Future[Result] =
     requestHeader.headers.get(HeaderNames.USER_AGENT) flatMap { userAgent =>
       val malicious =
-        bots filter { _.userAgent.findFirstIn(userAgent).isDefined } collectFirst {
-          case bot if bot.validate(requestHeader) =>
+        bots filter { _.isDefinedAt(requestHeader) } collectFirst {
+          case bot if bot.apply(requestHeader) =>
             logger.debug(s"${requestHeader.remoteAddress} $requestHeader matches ${bot.getBotName}, and it's valid.")
             false
           case bot =>

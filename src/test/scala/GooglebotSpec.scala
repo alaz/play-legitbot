@@ -11,16 +11,16 @@ class GooglebotSpec extends FunSpec with Matchers {
     it("recognizes 149.210.164.47 as malicious") {
       val request = FakeRequest("GET", "/", FakeHeaders(Seq(HeaderNames.USER_AGENT -> Seq("""Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"""))), AnyContentAsEmpty, "149.210.164.47")
 
-      Googlebot.userAgent.findFirstIn(request.headers(HeaderNames.USER_AGENT)) should be('defined)
-      Googlebot.validate(request) should equal(false)
+      Googlebot.isDefinedAt(request) should equal(true)
+      Googlebot.apply(request) should equal(false)
     }
 
     // 66.249.78.6 [25/Oct/2015:00:58:32 +0400] 200 "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
     it("recognizes 66.249.78.6 as valid") {
       val request = FakeRequest("GET", "/", FakeHeaders(Seq(HeaderNames.USER_AGENT -> Seq("""Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"""))), AnyContentAsEmpty, "66.249.78.6")
 
-      Googlebot.userAgent.findFirstIn(request.headers(HeaderNames.USER_AGENT)) should be('defined)
-      Googlebot.validate(request) should equal(true)
+      Googlebot.isDefinedAt(request) should equal(true)
+      Googlebot.apply(request) should equal(true)
     }
   }
 }
