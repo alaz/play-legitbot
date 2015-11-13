@@ -35,7 +35,7 @@ object VerifiableBot {
   //
   // fallbacks to unreliable `InetAddress.getByName(ip).getCanonicalHostName` if unsuccessful
   //
-  def reverseLookup(ip: String) = {
+  def reverseRecord(ip: String) = {
     import javax.naming.NamingException
     import javax.naming.directory._
     import scala.collection.convert.decorateAsScala._
@@ -53,29 +53,38 @@ object VerifiableBot {
         }
       }
 
-    if (results.hasNext) results.next()
-    else InetAddress.getByName(ip).getCanonicalHostName
-  }
+    if (results.hasNext)
+      Some(results.next())
+    else {
+      val addr = InetAddress.getByName(ip)
+      val reverse = addr.getCanonicalHostName
 
-  def reverseMatch(domains: Seq[String])(ip: String) = {
-    val reverse = reverseLookup(ip)
-    domains.exists(reverse.endsWith)
-  }
-
-  def reverseForwardMatch(domains: Seq[String])(ip: String) = {
-    val addr = InetAddress.getByName(ip)
-    val reverse = reverseLookup(ip)
-    failAsValue(classOf[java.net.UnknownHostException])(false) {
-      domains.exists(reverse.endsWith) && InetAddress.getByName(reverse) == addr
+      if (reverse == ip)
+        None
+      else
+        Some(reverse)
     }
   }
+
+  def matchesDomain(domains: String*)(record: String) = domains.exists(record.endsWith)
+
+  def matchesForward(ip: String)(record: String) =
+    failAsValue(classOf[java.net.UnknownHostException])(false) {
+      InetAddress.getByName(record) == InetAddress.getByName(ip)
+    }
+
+  def reverseMatch(domains: String*)(ip: String) =
+    reverseRecord(ip) filter matchesDomain(domains:_*)
+
+  def reverseForwardMatch(domains: String*)(ip: String) =
+    reverseMatch(domains:_*)(ip) filter matchesForward(ip)
 }
 
 // https://support.google.com/webmasters/answer/1061943
 // NOTE: NOT distinguishing between Video / Mobile / other variations
 trait Googlebot extends VerifiableBot {
   override def validate(req: RequestHeader) =
-    VerifiableBot.reverseForwardMatch(Seq("google.com", "googlebot.com"))(req.remoteAddress)
+    VerifiableBot.reverseForwardMatch("google.com", "googlebot.com")(req.remoteAddress).isDefined
 }
 
 object Googlebot extends Googlebot {
@@ -93,7 +102,7 @@ object Google_AdsBot extends Googlebot {
 // https://yandex.com/support/webmaster/robot-workings/check-yandex-robots.xml
 trait Yandexbot extends VerifiableBot {
   override def validate(req: RequestHeader) =
-    VerifiableBot.reverseForwardMatch(Seq("yandex.ru", "yandex.net", "yandex.com"))(req.remoteAddress)
+    VerifiableBot.reverseForwardMatch("yandex.ru", "yandex.net", "yandex.com")(req.remoteAddress).isDefined
 }
 
 object Yandexbot extends Yandexbot {
@@ -116,14 +125,14 @@ object YandexOther extends Yandexbot {
 object Bingbot extends VerifiableBot {
   override val userAgent = """Bingbot|bingbot""".r
   override def validate(req: RequestHeader) =
-    VerifiableBot.reverseForwardMatch(Seq("search.msn.com"))(req.remoteAddress)
+    VerifiableBot.reverseForwardMatch("search.msn.com")(req.remoteAddress).isDefined
 }
 
 // http://help.baidu.com/question?prod_en=master&class=498&id=1000973
 object Baiduspider extends VerifiableBot {
   override val userAgent = """Baiduspider""".r
   override def validate(req: RequestHeader) =
-    VerifiableBot.reverseMatch(Seq("baidu.com", "baidu.jp"))(req.remoteAddress)
+    VerifiableBot.reverseMatch("baidu.com", "baidu.jp")(req.remoteAddress).isDefined
 }
 
 // https://duckduckgo.com/duckduckbot
