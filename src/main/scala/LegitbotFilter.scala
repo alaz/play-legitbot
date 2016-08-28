@@ -1,16 +1,17 @@
 package com.osinka.play.legitbot
 
+import javax.inject.Inject
 import scala.concurrent.Future
-import org.slf4j.LoggerFactory
-import play.api.http.HeaderNames
 import play.api.mvc._
+import akka.stream.Materializer
+import org.slf4j.LoggerFactory
 
-case class LegitbotFilter(errorHandler: RequestHeader => Result = Defaults.errorHandler, bots: Seq[VerifiableBot] = Defaults.bots) extends Filter {
+class LegitbotFilter @Inject() (implicit val mat: Materializer, settings: LegitbotSettings) extends Filter {
   private val logger = LoggerFactory.getLogger(getClass)
 
   def apply(nextFilter: (RequestHeader) => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
     val malicious =
-      bots filter { _.isDefinedAt(requestHeader) } collectFirst {
+      settings.bots filter { _.isDefinedAt(requestHeader) } collectFirst {
         case bot if bot.apply(requestHeader) =>
           logger.debug(s"${requestHeader.remoteAddress} $requestHeader matches ${bot.getBotName}, and it's valid.")
           false
@@ -19,21 +20,13 @@ case class LegitbotFilter(errorHandler: RequestHeader => Result = Defaults.error
           true
       }
 
-    if (malicious.exists(true.==)) Future successful errorHandler(requestHeader)
+    if (malicious.exists(true.==)) Future successful settings.errorHandler(requestHeader)
     else nextFilter(requestHeader)
   }
 }
 
-object LegitbotFilter extends LegitbotFilter(Defaults.errorHandler, Defaults.bots)
-
-object Defaults {
-  val errorHandler: RequestHeader => Result = _ => Results.Forbidden
-
-  val bots = Seq(
-    Googlebot, Google_AdsBot, Google_AdSense,
-    Yandexbot, YandexDirect, YandexAntivirus, YandexOther,
-    Bingbot,
-    DuckDuckGo,
-    Baiduspider
-  )
+trait LegitbotSettings {
+  val errorHandler: RequestHeader => Result
+  val bots: Seq[VerifiableBot]
 }
+

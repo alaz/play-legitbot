@@ -12,12 +12,12 @@ organizationName := "Osinka"
 
 description := """Play Framework filter: allow only legitimate search bots to access the site"""
 
-scalaVersion in ThisBuild := "2.11.7"
+scalaVersion in ThisBuild := "2.11.8"
 
 libraryDependencies in ThisBuild ++= Seq(
-  "com.typesafe.play" %% "play" % "2.3.10" % "provided",
-  "com.typesafe.play" %% "play-test" % "2.3.10" % "test",
-  "org.scalatest" %% "scalatest" % "2.2.5" % "test"
+  "com.typesafe.play" %% "play" % "2.5.6" % "provided",
+  "com.typesafe.play" %% "play-test" % "2.5.6" % "test",
+  "org.scalatest" %% "scalatest" % "3.0.0" % "test"
 )
 
 resolvers ++= Seq(
@@ -27,14 +27,19 @@ resolvers ++= Seq(
 
 scalacOptions ++= List("-deprecation", "-unchecked", "-feature")
 
-credentials += Credentials(Path.userHome / ".ivy2/credentials_sonatype")
-
 pomIncludeRepository := { x => false }
+
+credentials <+= (version) map { version: String =>
+  val file =
+    if (version.trim endsWith "SNAPSHOT") "credentials_osinka"
+    else "credentials_sonatype"
+  Credentials(Path.userHome / ".ivy2" / file)
+}
 
 publishTo <<= (version) { version: String =>
   Some(
     if (version.trim endsWith "SNAPSHOT")
-      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+      "Osinka Internal Repo" at "https://r.osinka.co/content/repositories/snapshots/"
     else
       "Sonatype OSS Staging" at "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
   )
@@ -48,7 +53,7 @@ pomExtra := <xml:group>
       <id>alaz</id>
       <email>azarov@osinka.com</email>
       <name>Alexander Azarov</name>
-      <timezone>+2</timezone>
+      <timezone>Europe/Riga</timezone>
     </developer>
   </developers>
   <scm>

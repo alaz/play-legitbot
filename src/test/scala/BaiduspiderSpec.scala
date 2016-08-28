@@ -15,7 +15,7 @@ class BaiduspiderSpec extends FunSpec with Matchers {
     }
 
     it("recognizes 123.125.7.116 as malicious") {
-      val request = FakeRequest("GET", "/", FakeHeaders(Seq(HeaderNames.USER_AGENT -> Seq("""Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)"""))), AnyContentAsEmpty, "123.125.7.116")
+      val request = FakeRequest("GET", "/").withHeaders(HeaderNames.USER_AGENT -> """Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)""").copy(remoteAddress = "123.125.7.116")
 
       Baiduspider.isDefinedAt(request) should equal(true)
       Baiduspider.apply(request) should equal(false)
@@ -23,7 +23,7 @@ class BaiduspiderSpec extends FunSpec with Matchers {
 
     // 123.125.71.116 [12/Nov/2015:10:44:05 +0400] 200 "Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)"
     it("recognizes 123.125.71.116 as valid") {
-      val request = FakeRequest("GET", "/", FakeHeaders(Seq(HeaderNames.USER_AGENT -> Seq("""Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)"""))), AnyContentAsEmpty, "123.125.71.116")
+      val request = FakeRequest("GET", "/").withHeaders(HeaderNames.USER_AGENT -> """Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)""").copy(remoteAddress = "123.125.71.116")
 
       Baiduspider.isDefinedAt(request) should equal(true)
       Baiduspider.apply(request) should equal(true)
