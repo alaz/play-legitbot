@@ -1,9 +1,8 @@
 package com.osinka.play.legitbot
 
-import org.scalatest.{FunSpec, Matchers}
 import play.api.http.HeaderNames
-import play.api.mvc.AnyContentAsEmpty
-import play.api.test.{FakeHeaders, FakeRequest}
+import play.api.test.FakeRequest
+import org.scalatest.{FunSpec, Matchers}
 
 class BaiduspiderSpec extends FunSpec with Matchers {
   describe("Baiduspider check") {
