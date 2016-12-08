@@ -3,10 +3,9 @@ package com.osinka.play.legitbot
 import javax.inject.Inject
 import scala.concurrent.Future
 import play.api.mvc._
-import akka.stream.Materializer
 import org.slf4j.LoggerFactory
 
-class LegitbotFilter @Inject() (implicit val mat: Materializer, settings: LegitbotSettings) extends Filter {
+class LegitbotFilter @Inject() (settings: LegitbotSettings) extends Filter {
   private val logger = LoggerFactory.getLogger(getClass)
 
   def apply(nextFilter: (RequestHeader) => Future[Result])(requestHeader: RequestHeader): Future[Result] = {

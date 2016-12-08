@@ -15,8 +15,8 @@ description := """Play Framework filter: allow only legitimate search bots to ac
 scalaVersion in ThisBuild := "2.11.8"
 
 libraryDependencies in ThisBuild ++= Seq(
-  "com.typesafe.play" %% "play" % "2.5.6" % "provided",
-  "com.typesafe.play" %% "play-test" % "2.5.6" % "test",
+  "com.typesafe.play" %% "play" % "2.4.8" % "provided",
+  "com.typesafe.play" %% "play-test" % "2.4.8" % "test",
   "org.scalatest" %% "scalatest" % "3.0.0" % "test"
 )
 
